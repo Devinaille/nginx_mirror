@@ -5,15 +5,23 @@ import (
 	"log"
 	"net/http"
 	mc "nginx_mirror/config"
+	"nginx_mirror/mirror"
 	"os"
 )
 
 // mirrorConfig 配置文件全局变量
 var mirrorConfig mc.MirrorConfig
+var payloadQueue chan mirror.Payload
+var dispatcher *mirror.Dispatcher
 
 // mirrorHandler 接收镜像过来的请求
 func mirrorHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("get one")
+	log.Println("get one!")
+	payloadQueue <- mirror.Payload{
+		Headers: r.Header,
+		Method:  r.Method,
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -29,14 +37,32 @@ func init() {
 	if len(os.Args) >= 2 {
 		mirrorConfig.Load(os.Args[1])
 	}
+	log.Printf("URI: %s, port: %d, host: %s\n", mirrorConfig.MirrorURI, mirrorConfig.Port, mirrorConfig.Host)
+
 }
 
 func main() {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc(mirrorConfig.MirrorURI, mirrorHandler)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", mirrorConfig.Port), mux)
+	var err error
+	payloadQueue = make(chan mirror.Payload, 10000) // TODO: 队列长度可修改
+	dispatcher, err = mirror.NewDispatcher(1)       //TODO: worker个数可修改，可以使用环境变量
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	dispatcher.Run(payloadQueue)
+
+	mux := http.NewServeMux()
+
+	// stop all process
+	// go func() {
+	// 	// close(payloadQueue)
+	// 	time.Sleep(time.Second * 5)
+	// 	dispatcher.Stop()
+	// }()
+	mux.HandleFunc(mirrorConfig.MirrorURI, mirrorHandler)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", mirrorConfig.Host, mirrorConfig.Port), mux)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// TODO: 优雅的退出httpserver
 }
