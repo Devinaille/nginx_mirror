@@ -9,6 +9,7 @@ import (
 
 // MirrorConfig 静态服务器参数
 type MirrorConfig struct {
+	Host      string `yaml:"host"`
 	Port      int    `yaml:"port"`
 	MirrorURI string `yaml:"mirror_uri"`
 }
@@ -18,6 +19,7 @@ func NewMirrorConfig() MirrorConfig {
 	return MirrorConfig{
 		Port:      9999,
 		MirrorURI: "/mirror",
+		Host:      "",
 	}
 }
 
@@ -44,6 +46,10 @@ func (m *MirrorConfig) Load(path string) error {
 	// 加载URI
 	if mc.MirrorURI != "" {
 		m.MirrorURI = mc.MirrorURI
+	}
+
+	if mc.Host != "" {
+		m.Host = mc.Host
 	}
 	return nil
 }
