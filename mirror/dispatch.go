@@ -30,16 +30,17 @@ func NewDispatcher(maxWorkers int) (*Dispatcher, error) {
 }
 
 //Run run a dispatcher to dispatcher workers
-func (d *Dispatcher) Run(queue chan Payload) {
+// outputs 将结果输出给counter dispatch
+func (d *Dispatcher) Run(queue chan Payload, outputs []chan Request) {
 	for i := 0; i < d.MaxWorkers; i++ {
-		worker, err := NewWorker(d.WorkerPool)
+		worker, err := NewWorker(d.WorkerPool, outputs)
 		if err != nil {
 			log.Printf("One worker create failed, %s\n", err.Error())
 			continue
 		}
 
 		d.Workers[i] = worker
-		fmt.Printf("%p %p\n", worker.quit, d.Workers[i].quit)
+		// fmt.Printf("%p %p\n", worker.quit, d.Workers[i].quit)
 		worker.Start()
 	}
 	// fmt.Println(d.QuitPool)

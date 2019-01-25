@@ -9,6 +9,7 @@ Use mirror upstream to statstic http info.
 
 ## 依赖
 * nginx_http_mirror_module(nginx >= 1.13.4)
+* 在nginx配置中使用proxy_set_header 见 *nginx配置*
 * influxdb
 
 ## nginx 配置

@@ -19,7 +19,7 @@ func NewMirrorConfig() MirrorConfig {
 	return MirrorConfig{
 		Port:      9999,
 		MirrorURI: "/mirror",
-		Host:      "",
+		Host:      "127.0.0.1",
 	}
 }
 
